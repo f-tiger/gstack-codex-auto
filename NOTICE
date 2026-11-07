@@ -1,0 +1,13 @@
+gstack-codex-auto is an original implementation of a Codex CLI development
+controller. Its workflow is inspired by:
+
+- loperanger7/gstack-auto: https://github.com/loperanger7/gstack-auto
+- garrytan/gstack: https://github.com/garrytan/gstack
+
+No upstream source files, prompt templates, UI assets, or binaries are included.
+Locally installed gstack skills are optional external inputs, subject to their
+own licenses and operating requirements. The MIT license in this repository
+covers this project's original code and documentation only.
+
+This project is not affiliated with or endorsed by OpenAI or the authors of
+gstack or gstack-auto. Codex and other product names belong to their owners.

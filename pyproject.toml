@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gstack-codex-auto"
+version = "0.1.0"
+description = "A resumable, evidence-gated development pipeline driven by Codex CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{name = "f-tiger"}]
+dependencies = []
+
+[project.scripts]
+gstack-codex-auto = "gstack_codex_auto.cli:main"
+
+[project.urls]
+Repository = "https://github.com/f-tiger/gstack-codex-auto"
+Issues = "https://github.com/f-tiger/gstack-codex-auto/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]

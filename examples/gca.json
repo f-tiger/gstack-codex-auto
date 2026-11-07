@@ -1,0 +1,13 @@
+{
+  "repo": "../demo-target",
+  "spec": "SPEC.md",
+  "skill_mode": "builtin",
+  "candidates": 1,
+  "parallel": 1,
+  "rounds": 1,
+  "max_fixes": 2,
+  "max_calls": 30,
+  "timeout": 1200,
+  "gate_timeout": 60,
+  "gates": [["python3", "/ABSOLUTE/PATH/TO/gstack-codex-auto/examples/acceptance.py"]]
+}
