@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-from gstack_codex_auto.engine import load_config, new_run, run, report
+from gstack_codex_auto.engine import load_config, new_run, run, report, skill_snapshot
 from gstack_codex_auto.phases import PHASES
 from gstack_codex_auto.runtime import (CodexRunner, PipelineError, atomic_json, git,
                                        fingerprint, lock, process, validate_response)
@@ -155,6 +155,19 @@ class PipelineTests(unittest.TestCase):
         self.persist()
         with self.assertRaises(PipelineError):
             new_run(self.config, self.run_dir)
+
+    def test_current_gstack_embedded_engineering_skill(self):
+        skills = self.root / "skills"
+        for name in {p.skill for p in PHASES if p.skill and p.skill != "plan-eng-review"}:
+            path = skills / f"gstack-{name}" / "SKILL.md"
+            path.parent.mkdir(parents=True)
+            path.write_text("fixture skill")
+        embedded = skills / "gstack-autoplan" / "plan-eng-review.md"
+        embedded.parent.mkdir(parents=True)
+        embedded.write_text("fixture engineering methodology")
+        snapshot = skill_snapshot({"skill_mode": "gstack", "skills_dir": str(skills)})
+        self.assertEqual(len(snapshot), 7)
+        self.assertEqual(snapshot["plan-eng-review"]["path"], str(embedded))
 
     def test_timeout(self):
         with self.assertRaises(PipelineError):

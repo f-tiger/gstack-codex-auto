@@ -10,7 +10,7 @@ Local environment: Linux, Python 3.12.14. Run:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
-30 tests passed during release preparation. They exercise temporary real Git
+31 tests passed during release preparation. They exercise temporary real Git
 repositories, worktrees, subprocesses and deterministic model fixtures:
 
 - Repairing a failed objective test, while preserving the original checkout.
@@ -22,6 +22,8 @@ repositories, worktrees, subprocesses and deterministic model fixtures:
   executable that obeys its stdin/argv/JSON-output contract.
 - Exact-SHA draft-PR publishing, duplicate-PR reuse and refusal of an incorrect
   origin, changed winning branch or incomplete run, with GitHub calls mocked.
+- Loading the current gstack layout where the engineering methodology is
+  embedded in `gstack-autoplan/plan-eng-review.md`.
 
 The fake executable is test-only. Production does not contain a mock-provider
 fallback. These tests verify orchestration; they do not evaluate generated code
@@ -39,7 +41,8 @@ HTTP 401, and the CLI reported that its access token could not be refreshed.
 The smoke request did not successfully complete, so a real 13-phase run was
 not attempted. No model-generated acceptance result is claimed.
 
-Local gstack Codex skill files were found, but successful execution of their
+Local gstack Codex skill files (including the embedded engineering methodology)
+were checked with `doctor`, but successful execution of their
 helpers, browser behavior and workflows through this controller remains
 unverified. This is an experimental release, not host certification.
 

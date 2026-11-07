@@ -60,6 +60,10 @@ def skill_snapshot(c):
     out = {}
     for name in sorted({p.skill for p in PHASES if p.skill}):
         path = root / f"gstack-{name}" / "SKILL.md"
+        # New gstack releases retire the standalone entry but ship this
+        # Codex-rendered methodology beside autoplan's SKILL.md (GST-1698).
+        if name == "plan-eng-review" and not path.is_file():
+            path = root / "gstack-autoplan" / "plan-eng-review.md"
         if not path.is_file():
             raise PipelineError(f"Missing gstack skill: {path}; install gstack for Codex or explicitly use builtin mode")
         out[name] = {"path": str(path), "sha256": digest(path.read_text())}

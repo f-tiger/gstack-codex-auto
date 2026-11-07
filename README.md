@@ -56,7 +56,7 @@ python3 -m venv .venv
 .venv/bin/gstack-codex-auto --help
 ```
 
-For the default `gstack` mode, first install upstream's Codex support following its instructions, for example `./setup --host codex` from a gstack checkout. GCA looks for `gstack-*/SKILL.md` in `${CODEX_HOME:-~/.codex}/skills`, or your configured `skills_dir`. It requires `plan-ceo-review`, `plan-eng-review`, `plan-design-review`, `review`, `qa`, `document-release` and `retro`. Third-party skills and binaries are **not bundled**. Keep the installation unchanged during a run.
+For the default `gstack` mode, first install upstream's Codex support following its instructions, for example `./setup --host codex` from a gstack checkout. GCA looks for `gstack-*/SKILL.md` in `${CODEX_HOME:-~/.codex}/skills`, or your configured `skills_dir`. It requires `plan-ceo-review`, `plan-eng-review`, `plan-design-review`, `review`, `qa`, `document-release` and `retro`. Newer gstack releases ship the engineering methodology as `gstack-autoplan/plan-eng-review.md`; GCA supports that layout as well as the older standalone skill. Third-party skills and binaries are **not bundled**. Keep the installation unchanged during a run.
 
 `"skill_mode": "builtin"` explicitly uses this project's original role briefs without upstream skills. Missing gstack skills never silently select that mode.
 
