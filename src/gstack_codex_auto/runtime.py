@@ -7,6 +7,7 @@ from pathlib import Path
 import signal
 import subprocess
 import time
+import tempfile
 import fcntl
 from contextlib import contextmanager
 
@@ -51,37 +52,72 @@ def lock(path, wait=False):
             fcntl.flock(f, fcntl.LOCK_UN)
 
 
-def process(argv, cwd, timeout, stdin=None, log=None):
+def process(argv, cwd, timeout, stdin=None, log=None, cancel_event=None):
     """Never shell-expand config commands. Kill the process group on timeout."""
     start = time.monotonic()
-    sink = open(log, "w") if log else None
+    sink = open(log, "w+b") if log else tempfile.TemporaryFile()
     if log:
         os.chmod(log, 0o600)
     try:
         with subprocess.Popen(argv, cwd=cwd, stdin=subprocess.PIPE,
-                              stdout=sink or subprocess.PIPE, stderr=subprocess.STDOUT,
+                              stdout=sink, stderr=subprocess.STDOUT,
                               text=True, start_new_session=True) as proc:
             try:
-                out, _ = proc.communicate(stdin, timeout=timeout)
+                if cancel_event is None:
+                    proc.communicate(stdin, timeout=timeout)
+                else:
+                    first = True
+                    while True:
+                        if cancel_event.is_set():
+                            raise PipelineError("Run interrupted; stopping active subprocess")
+                        remaining = timeout - (time.monotonic() - start)
+                        if remaining <= 0:
+                            raise subprocess.TimeoutExpired(argv, timeout)
+                        try:
+                            proc.communicate(stdin if first else None, timeout=min(.1, remaining))
+                            break
+                        except subprocess.TimeoutExpired:
+                            first = False
             except (subprocess.TimeoutExpired, KeyboardInterrupt):
-                os.killpg(proc.pid, signal.SIGTERM)
+                raise PipelineError(f"Command interrupted or timed out after {timeout}s: {argv[0]}")
+            finally:
+                # The leader can exit before its descendants. Always clean the
+                # group, including after success, so late writes cannot escape checks.
+                signal_group(proc.pid, signal.SIGTERM)
                 try:
                     proc.wait(timeout=3)
                 except subprocess.TimeoutExpired:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                    proc.wait()
-                raise PipelineError(f"Command interrupted or timed out after {timeout}s: {argv[0]}")
-            if not sink and out and len(out) > 2_000_000:
+                    pass
+                signal_group(proc.pid, signal.SIGKILL)
+                proc.wait()
+            out = b""
+            if not log:
+                sink.seek(0)
+                out = sink.read(2_000_001)
+            if len(out) > 2_000_000:
                 raise PipelineError("Command output exceeded 2 MB; use log capture")
-            return {"returncode": proc.returncode, "output": out or "",
+            return {"returncode": proc.returncode, "output": out.decode(errors="replace"),
                     "seconds": round(time.monotonic() - start, 3)}
     finally:
-        if sink:
-            sink.close()
+        sink.close()
+
+
+def signal_group(pid, sig):
+    try:
+        os.killpg(pid, sig)
+    except ProcessLookupError:
+        pass
+
+
+def read_tail(path, size=6000):
+    with Path(path).open("rb") as stream:
+        stream.seek(0, os.SEEK_END)
+        stream.seek(max(0, stream.tell() - size))
+        return stream.read(size).decode(errors="replace")
 
 
 def git(repo, *args, strip=True):
-    r = process(["git", "-C", str(repo), *args], repo, 120)
+    r = process(["git", "-c", "core.hooksPath=/dev/null", "-C", str(repo), *args], repo, 120)
     if r["returncode"]:
         raise PipelineError(f"git {args[0]} failed: {r['output'][-1500:]}")
     return r["output"].strip() if strip else r["output"]
@@ -91,6 +127,8 @@ def fingerprint(repo):
     # Includes unstaged, staged and untracked (non-ignored) content.
     names = git(repo, "ls-files", "-co", "--exclude-standard", "-z", strip=False).split("\0")
     h = hashlib.sha256(git(repo, "rev-parse", "HEAD").encode())
+    h.update(git(repo, "rev-parse", "--abbrev-ref", "HEAD").encode())
+    h.update(git(repo, "ls-files", "--stage", "-v", "-z", strip=False).encode())
     for name in sorted(set(filter(None, names))):
         p = Path(repo) / name
         h.update(name.encode())
@@ -100,6 +138,20 @@ def fingerprint(repo):
         elif p.is_file():
             h.update(p.read_bytes())
     return h.hexdigest()
+
+
+def check_index(repo, clean=False):
+    """Reject Git flags that hide differences between tested files and commits."""
+    entries = git(repo, "ls-files", "--stage", "-v", "-z", strip=False).split("\0")
+    for entry in filter(None, entries):
+        if entry[0].islower() or entry[0] == "S":
+            raise PipelineError("Hidden index flags (assume-unchanged/skip-worktree) are unsupported")
+        if entry[2:8] == "160000":
+            raise PipelineError("Submodules are unsupported; use a standalone target repository")
+    if git(repo, "ls-files", "--unmerged"):
+        raise PipelineError("Unmerged index entries")
+    if clean and git(repo, "status", "--porcelain"):
+        raise PipelineError("Candidate is not a clean committed tree")
 
 
 def validate_response(value):
@@ -128,8 +180,9 @@ def passed(response):
 
 
 class CodexRunner:
-    def __init__(self, config):
+    def __init__(self, config, cancel_event=None):
         self.config = config
+        self.cancel_event = cancel_event
 
     def run(self, phase, prompt, worktree, artifact):
         schema = artifact.with_suffix(".schema.json")
@@ -145,7 +198,7 @@ class CodexRunner:
             argv += ["--model", self.config["model"]]
         argv.append("-")
         result = process(argv, worktree, self.config["timeout"], stdin=prompt,
-                         log=artifact.with_suffix(".events.jsonl"))
+                         log=artifact.with_suffix(".events.jsonl"), cancel_event=self.cancel_event)
         if result["returncode"]:
             raise PipelineError(f"Codex exited {result['returncode']}; inspect {artifact.with_suffix('.events.jsonl')}")
         if not output.is_file():

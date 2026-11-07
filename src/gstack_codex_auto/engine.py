@@ -4,11 +4,12 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+from threading import Event
 import uuid
 
 from .phases import PHASES, REPAIR
-from .runtime import (CodexRunner, PipelineError, atomic_json, digest, fingerprint,
-                      git, lock, passed, process, read_json, validate_response)
+from .runtime import (CodexRunner, PipelineError, atomic_json, check_index, digest, fingerprint,
+                      git, lock, passed, process, read_json, read_tail, validate_response)
 
 
 def load_config(path):
@@ -73,6 +74,7 @@ def skill_snapshot(c):
 def new_run(config_path, run_dir):
     c = load_config(config_path)
     repo = c["repo"]
+    check_index(repo)
     if git(repo, "status", "--porcelain"):
         raise PipelineError("Commit or stash changes first; a run requires a clean source repository")
     skills = skill_snapshot(c)
@@ -80,7 +82,7 @@ def new_run(config_path, run_dir):
     if root == Path(repo) or Path(repo) in root.parents:
         raise PipelineError("Run state/worktrees must live outside the target repository")
     root.mkdir(parents=True, exist_ok=False, mode=0o700)
-    state = {"version": 1, "id": uuid.uuid4().hex[:12], "status": "ready",
+    state = {"version": 2, "id": uuid.uuid4().hex[:12], "status": "ready",
              "created": datetime.now(timezone.utc).isoformat(), "config": c,
              "spec_text": Path(c["spec"]).read_text(), "skills": skills,
              "base": git(repo, "rev-parse", "HEAD"), "winners": [], "round": 1}
@@ -100,8 +102,9 @@ def reserve_call(root, limit):
 
 
 class Candidate:
-    def __init__(self, root, state, number, runner):
+    def __init__(self, root, state, number, runner, cancel_event=None):
         self.root, self.state, self.c, self.runner = root, state, state["config"], runner
+        self.cancel_event = cancel_event
         self.round = state["round"]
         self.dir = root / f"round-{self.round}" / f"candidate-{number}"
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -116,8 +119,18 @@ class Candidate:
                 raise PipelineError("Candidate integrity violation; inspect artifacts and start a new run")
             if not self.worktree.exists():
                 raise PipelineError("Candidate worktree missing; restore it before resuming")
-            if fingerprint(self.worktree) != self.data["fingerprint"] and not self.data.get("inflight"):
+            pending = self.data.get("inflight")
+            if pending:
+                if not isinstance(pending, dict):
+                    raise PipelineError("Legacy interrupted checkpoint; start a new run")
+                if (git(self.worktree, "rev-parse", "HEAD") != pending["head"]
+                        or git(self.worktree, "rev-parse", "--abbrev-ref", "HEAD") != pending["branch"]):
+                    raise PipelineError("Interrupted candidate HEAD/branch changed; start a new run")
+                if not pending["write"] and fingerprint(self.worktree) != pending["tree"]:
+                    raise PipelineError("Interrupted read-only candidate changed outside the pipeline")
+            elif fingerprint(self.worktree) != self.data["fingerprint"]:
                 raise PipelineError("Candidate changed outside the pipeline; refusing stale checkpoint")
+            check_index(self.worktree)
         else:
             if self.worktree.exists():
                 raise PipelineError(f"Unregistered worktree found at {self.worktree}; inspect before recovery")
@@ -130,6 +143,8 @@ class Candidate:
         atomic_json(self.path, self.data)
 
     def stop_check(self):
+        if self.cancel_event and self.cancel_event.is_set():
+            raise PipelineError("Run interrupted")
         if (self.root / "STOP").exists():
             raise PipelineError("STOP file present; no further work scheduled")
 
@@ -148,12 +163,15 @@ class Candidate:
                 raise PipelineError(f"Checkpoint artifact modified: {key}")
             cached = validate_response(read_json(entry["artifact"]))
             # Reviews and scores may only certify the exact tree they inspected.
-            if not (phase.id in ("10-review", "11-qa", "13-score")
+            if passed(cached) and not (phase.id in ("10-review", "11-qa", "13-score")
                     and entry.get("tree") != fingerprint(self.worktree)):
                 return cached
         reserve_call(self.root, self.c["max_calls"])
         self.data["calls"] += 1
-        self.data["inflight"] = key
+        self.data["inflight"] = {"key": key, "write": phase.write,
+                                 "head": git(self.worktree, "rev-parse", "HEAD"),
+                                 "branch": git(self.worktree, "rev-parse", "--abbrev-ref", "HEAD"),
+                                 "tree": fingerprint(self.worktree)}
         self.save()
         previous = {k: read_json(v["artifact"]) for k, v in self.data["steps"].items()}
         skill = self.state["skills"].get(phase.skill)
@@ -189,6 +207,12 @@ class Candidate:
             # Even failed/invalid responses cannot hide unauthorized changes.
             if git(self.worktree, "rev-parse", "HEAD") != head:
                 self.integrity_error("Agent changed HEAD; only controller may commit")
+            if git(self.worktree, "rev-parse", "--abbrev-ref", "HEAD") != self.branch:
+                self.integrity_error("Agent changed candidate branch")
+            try:
+                check_index(self.worktree)
+            except PipelineError as exc:
+                self.integrity_error(str(exc))
             if not phase.write and fingerprint(self.worktree) != before:
                 self.integrity_error("Read-only phase modified candidate files")
         if phase.write and git(self.worktree, "status", "--porcelain"):
@@ -213,10 +237,11 @@ class Candidate:
             for i, argv in enumerate(self.c["gates"]):
                 self.stop_check()
                 log = self.dir / f"{label}-gate-{i}.log"
-                result = process(argv, self.worktree, self.c["gate_timeout"], log=log)
+                result = process(argv, self.worktree, self.c["gate_timeout"], log=log,
+                                 cancel_event=self.cancel_event)
                 receipts.append({"argv": argv, "returncode": result["returncode"],
                                  "seconds": result["seconds"], "log": str(log),
-                                 "tail": log.read_text(errors="replace")[-6000:]})
+                                 "tail": read_tail(log)})
         finally:
             if fingerprint(self.worktree) != before:
                 self.integrity_error("Gate changed tracked/non-ignored source; use non-mutating checks or ignore generated outputs")
@@ -258,6 +283,13 @@ class Candidate:
             score = self.phase(PHASES[12], extra=receipts)
             if not passed(score):
                 raise PipelineError("Scoring found blocking issues")
+            check_index(self.worktree, clean=True)
+            gate_file = self.dir / f"verify-{attempt}-gates.json"
+            self.data["verification"] = {
+                "review": f"10-review-{attempt}", "qa": f"11-qa-{attempt}",
+                "gates": str(gate_file), "gates_sha256": digest(gate_file.read_text()),
+                "tree": fingerprint(self.worktree),
+            }
             self.data.update(status="eligible", score=sum(score["scores"].values()) / 5,
                              scores=score["scores"], sha=git(self.worktree, "rev-parse", "HEAD"),
                              fingerprint=fingerprint(self.worktree))
@@ -272,33 +304,46 @@ def run(root, runner=None):
     root = Path(root).expanduser().resolve()
     with lock(root / "run.lock"):
         state = read_json(root / "run.json")
+        if state.get("version") != 2:
+            raise PipelineError("Unsupported checkpoint version; start a new run")
         c = state["config"]
+        if state["winners"]:
+            verify_winner(root, state, state["winners"][-1])
         if state["status"] == "complete":
             return state
         for skill in state["skills"].values():
             if digest(Path(skill["path"]).read_text()) != skill["sha256"]:
                 raise PipelineError("Installed skill changed since run creation; start a new run")
-        runner = runner or CodexRunner(c)
+        cancel_event = Event()
+        runner = runner or CodexRunner(c, cancel_event)
         state["status"] = "running"
         atomic_json(root / "run.json", state)
         while state["round"] <= c["rounds"]:
             candidates = []
             with ThreadPoolExecutor(max_workers=min(c["parallel"], c["candidates"])) as pool:
-                futures = {pool.submit(_candidate, root, state, i, runner): i
+                futures = {pool.submit(_candidate, root, state, i, runner, cancel_event): i
                            for i in range(1, c["candidates"] + 1)}
-                for future in as_completed(futures):
-                    try:
-                        candidates.append((futures[future], future.result()))
-                    except (PipelineError, OSError, ValueError) as exc:
-                        candidates.append((futures[future], {"status": "blocked", "error": str(exc)}))
+                try:
+                    for future in as_completed(futures):
+                        try:
+                            candidates.append((futures[future], future.result()))
+                        except (PipelineError, OSError, ValueError) as exc:
+                            candidates.append((futures[future], {"status": "blocked", "error": str(exc)}))
+                except KeyboardInterrupt:
+                    cancel_event.set()
+            if cancel_event.is_set():
+                state.update(status="blocked", errors=["Run interrupted; resume after inspecting partial edits"])
+                break
             eligible = [(i, x) for i, x in candidates if x["status"] == "eligible"]
             if not eligible:
                 state.update(status="blocked", errors=[x.get("error") for _, x in candidates])
                 break
             number, best = sorted(eligible, key=lambda x: (-x[1]["score"], x[1]["fixes"], x[0]))[0]
-            state["winners"].append({"round": state["round"], "candidate": number,
+            winner = {"round": state["round"], "candidate": number,
                                      "sha": best["sha"], "branch": best["branch"],
-                                     "score": best["score"], "fixes": best["fixes"]})
+                                     "score": best["score"], "fixes": best["fixes"]}
+            verify_winner(root, state, winner)
+            state["winners"].append(winner)
             state["round"] += 1
             atomic_json(root / "run.json", state)
         if state["round"] > c["rounds"]:
@@ -308,10 +353,12 @@ def run(root, runner=None):
         return state
 
 
-def _candidate(root, state, number, runner):
+def _candidate(root, state, number, runner, cancel_event=None):
+    if cancel_event and cancel_event.is_set():
+        raise PipelineError("Run interrupted")
     if (root / "STOP").exists():
         raise PipelineError("STOP file present")
-    return Candidate(root, state, number, runner).execute()
+    return Candidate(root, state, number, runner, cancel_event).execute()
 
 
 def report(root):
@@ -320,3 +367,31 @@ def report(root):
             "skill_mode": state["config"]["skill_mode"], "winners": state["winners"],
             "calls": read_json(Path(root) / "budget.json")["used"], "errors": state.get("errors", []),
             "note": "Scores are Codex judgments. Gate exits are local execution evidence, not independent safety certification."}
+
+
+def verify_winner(root, state, winner):
+    """Revalidate final evidence before reuse or publication, never trust a status label alone."""
+    directory = Path(root) / f"round-{winner['round']}" / f"candidate-{winner['candidate']}"
+    data = read_json(directory / "candidate.json")
+    proof = data.get("verification")
+    if data["status"] != "eligible" or not proof or data["sha"] != winner["sha"]:
+        raise PipelineError("Winner lacks final verification evidence; start a new run")
+    worktree = directory / "worktree"
+    check_index(worktree, clean=True)
+    if (git(worktree, "rev-parse", "HEAD") != winner["sha"]
+            or git(worktree, "rev-parse", "--abbrev-ref", "HEAD") != winner["branch"]
+            or fingerprint(worktree) != proof["tree"]):
+        raise PipelineError("Winner tree changed since verification")
+    for key in (proof["review"], proof["qa"], "13-score"):
+        entry = data["steps"][key]
+        if digest(Path(entry["artifact"]).read_text()) != entry["sha256"]:
+            raise PipelineError("Winner verification artifact changed")
+        result = validate_response(read_json(entry["artifact"]))
+        if not passed(result) or entry["tree"] != proof["tree"]:
+            raise PipelineError("Winner review/QA/score does not certify the final tree")
+    if digest(Path(proof["gates"]).read_text()) != proof["gates_sha256"]:
+        raise PipelineError("Winner gate receipts changed")
+    receipts = read_json(proof["gates"])
+    if ([r["argv"] for r in receipts] != state["config"]["gates"]
+            or not receipts or any(r["returncode"] != 0 for r in receipts)):
+        raise PipelineError("Winner objective gates did not pass")

@@ -3,9 +3,11 @@
 [![CI](https://github.com/f-tiger/gstack-codex-auto/actions/workflows/ci.yml/badge.svg)](https://github.com/f-tiger/gstack-codex-auto/actions/workflows/ci.yml)
 [中文说明](README.zh-CN.md) · [Validation](docs/validation.md) · [Security](SECURITY.md)
 
+The v0.1.1 update includes [two adversarial review passes](docs/adversarial-review.md), with regression tests and explicit limitations.
+
 Turn a product spec into a reviewed, tested Git branch through a bounded **Codex CLI** pipeline. Inspired by the workflow in [gstack-auto](https://github.com/loperanger7/gstack-auto); this is an original implementation with no Claude runtime dependency.
 
-**Experimental v0.1.0.** Offline controller tests and a simulated CLI integration test cover the workflow. A live Codex smoke attempt during release preparation was rejected with HTTP 401. A real model end-to-end run has **not** been validated. See [the validation record](docs/validation.md).
+**Experimental v0.1.1.** Offline controller tests and a simulated CLI integration test cover the workflow. A live Codex smoke attempt during release preparation was rejected with HTTP 401. A real model end-to-end run has **not** been validated. See [the validation record](docs/validation.md).
 
 ## What it does
 
@@ -35,14 +37,14 @@ flowchart TD
 - **Bounded execution:** invocation count, subprocess timeouts, repair count and a `STOP` file.
 - **Explicit publishing:** `run` produces local branches; `publish` pushes the exact winning commit and opens a draft PR.
 
-This automates the core spec → planning → implementation → review → QA → repair → documentation → delivery flow. It does **not** execute every optional gstack utility. Interactive `/office-hours`, a web dashboard, email, deployment and automatic merging are outside v0.1.0. A spec is the input. Independent sessions of the same Codex model are **not cross-model review**, and candidate selection is **not reinforcement learning**.
+This automates the core spec → planning → implementation → review → QA → repair → documentation → delivery flow. It does **not** execute every optional gstack utility. Interactive `/office-hours`, a web dashboard, email, deployment and automatic merging are outside v0.1.1. A spec is the input. Independent sessions of the same Codex model are **not cross-model review**, and candidate selection is **not reinforcement learning**.
 
 ## Install
 
 Requires **Python 3.11+**, Git, an installed/authenticated [Codex CLI](https://developers.openai.com/codex/cli/), and Linux, macOS or WSL. Native Windows is not supported. GitHub CLI is only needed for `publish`. The Python package has no runtime dependencies.
 
 ```bash
-pipx install 'git+https://github.com/f-tiger/gstack-codex-auto.git@v0.1.0'
+pipx install 'git+https://github.com/f-tiger/gstack-codex-auto.git@v0.1.1'
 gstack-codex-auto --version
 ```
 
@@ -124,11 +126,13 @@ gstack-codex-auto resume ../gca-runs/feature-001
 touch ../gca-runs/feature-001/STOP
 ```
 
-`STOP` prevents subsequent phases/gates/candidates from being scheduled. It does not cancel an already running subprocess; that process keeps its configured timeout. Remove `STOP` to resume. Interrupted write phases can leave partial changes, which the resumed phase sees. Do not manually edit candidate worktrees while a run is active or interrupted. Integrity violations require inspection and a new run. A consumed invocation budget is never reset by resume.
+`STOP` prevents subsequent phases/gates/candidates from being scheduled. It does not cancel an already running subprocess; that process keeps its configured timeout. Remove `STOP` to resume. Ctrl+C propagates cancellation to active Codex/gate processes. Commands cannot leave background processes in their original process group; provision any persistent server separately. Interrupted write phases can leave partial changes, which the resumed phase sees, but their HEAD/branch must remain unchanged. An interruption during a controller commit may require a new run rather than guessing whether that commit was verified. Do not manually edit candidate worktrees while a run is active or interrupted. Integrity violations require inspection and a new run. A consumed invocation budget is never reset by resume. A blocked model response is retried on resume; successful cached phases are reused subject to evidence checks.
+
+v0.1.1 uses checkpoint schema 2. Earlier run directories are rejected by `resume`/`publish`; start a new run. Submodules, sparse/skip-worktree indexes and assume-unchanged flags are unsupported because they can hide differences between files being tested and the committed tree.
 
 Artifacts live under `round-N/candidate-N/`: prompts, raw Codex events, JSON results, gate logs, checkpoints and the worktree. These contain private code and task data. The state directory is created with mode `0700`; don't publish it. The config/spec are snapshotted. Top-level skill files are hashed; referenced skill documents and binaries are **not** frozen. A candidate winner is chosen by average model score, then fewer repairs, then candidate number. Scores do not establish correctness beyond the configured checks.
 
-The source checkout remains on its original branch. GCA creates shared Git metadata and local `gca/...` branches, and commits candidate edits with hooks disabled so commits cannot trigger deployment hooks. Worktrees are a convenience for separate changes, **not a security boundary**.
+The source checkout remains on its original branch. GCA creates shared Git metadata and local `gca/...` branches. All controller Git commands disable hooks, including worktree creation and push. Worktrees are a convenience for separate changes, **not a security boundary**.
 
 ## Publish a completed candidate
 
@@ -139,7 +143,7 @@ gstack-codex-auto publish ../gca-runs/feature-001 \
   --github-repo OWNER/REPO --base main --title "Implement feature"
 ```
 
-The requested GitHub repository must exactly match `origin` (HTTPS or standard SSH URL). Only a completed run with an unchanged winning branch can be pushed. Repeating the command reuses an existing open PR. It never merges or deploys. Review generated changes for secrets and rerun CI before merging.
+The requested GitHub repository must exactly match `origin` and every resolved push URL (HTTPS or standard SSH URL). Publishing holds the run lock and rechecks the winner's committed tree, review/QA/score artifacts and gate receipts. Retain the winner's worktree and artifacts until publication. Implicit tag following is disabled. Repeating the command reuses an existing open PR. It never merges or deploys. Review generated changes for secrets and rerun CI before merging. `status`/`report` display saved state; `resume` and `publish` revalidate final evidence.
 
 ## Development
 

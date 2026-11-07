@@ -5,9 +5,9 @@ import shutil
 import sys
 
 from . import __version__
-from .engine import load_config, new_run, report, run, skill_snapshot
+from .engine import load_config, new_run, report, run, skill_snapshot, verify_winner
 from .phases import PHASES
-from .runtime import PipelineError, git, process, read_json
+from .runtime import PipelineError, git, lock, process, read_json
 
 
 def main(argv=None):
@@ -63,18 +63,30 @@ def main(argv=None):
 
 
 def publish(args):
-    state = read_json(Path(args.run_dir) / "run.json")
+    root = Path(args.run_dir).expanduser().resolve()
+    with lock(root / "run.lock"):
+        return _publish(args, root)
+
+
+def _publish(args, root):
+    state = read_json(root / "run.json")
+    if state.get("version") != 2:
+        raise PipelineError("Unsupported checkpoint version; start a new run")
     if state["status"] != "complete":
         raise PipelineError("Only completed runs can be published")
     winner = state["winners"][-1]
+    verify_winner(root, state, winner)
     repo = state["config"]["repo"]
     remote = git(repo, "remote", "get-url", "origin")
     allowed = [f"https://github.com/{args.github_repo}", f"git@github.com:{args.github_repo}"]
     if remote.removesuffix(".git") not in allowed:
         raise PipelineError("Requested GitHub repository does not match origin")
+    push_urls = git(repo, "remote", "get-url", "--push", "--all", "origin").splitlines()
+    if not push_urls or any(url.removesuffix(".git") not in allowed for url in push_urls):
+        raise PipelineError("Requested GitHub repository does not match every origin push URL")
     if git(repo, "rev-parse", winner["branch"]) != winner["sha"]:
         raise PipelineError("Winner branch changed since verification")
-    git(repo, "push", "origin", f"{winner['sha']}:refs/heads/{winner['branch']}")
+    git(repo, "push", "--no-follow-tags", "origin", f"{winner['sha']}:refs/heads/{winner['branch']}")
     existing = process(["gh", "pr", "list", "--repo", args.github_repo,
                         "--head", winner["branch"], "--base", args.base, "--json", "url"], repo, 60)
     if existing["returncode"]:

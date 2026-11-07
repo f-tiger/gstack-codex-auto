@@ -2,9 +2,11 @@
 
 [English](README.md) · [验证记录](docs/validation.md) · [安全边界](SECURITY.md)
 
+v0.1.1 完成了[两轮对抗检查](docs/adversarial-review.md)，修复恢复、提交一致性、进程清理和发布边界问题。
+
 把产品需求交给 **Codex CLI**，自动串联规划、质疑、实现、审查、QA、修复、文档和候选选择，输出可审阅的 Git 分支。参考 [gstack-auto](https://github.com/loperanger7/gstack-auto) 的流程设计，使用独立编写的 Python 控制器，不依赖 Claude 运行时。
 
-**当前是实验性 v0.1.0。** 控制器离线测试和模拟 CLI 集成测试已覆盖主要流程；发布准备时的真实 Codex 请求返回 HTTP 401。因此尚未完成真实模型的全流程验收，不能把离线测试当成真实项目成功率的证据。
+**当前是实验性 v0.1.1。** 控制器离线测试和模拟 CLI 集成测试已覆盖主要流程；发布准备时的真实 Codex 请求返回 HTTP 401。因此尚未完成真实模型的全流程验收，不能把离线测试当成真实项目成功率的证据。
 
 ## 能做什么
 
@@ -15,14 +17,14 @@
 - 默认读取本机安装的 gstack Codex skills；缺失时明确报错。显式选择 `builtin` 才会使用本项目的基础角色说明。
 - `publish` 命令可推送最终候选并创建 GitHub 草稿 PR，不会自动合并或部署。
 
-范围是开发主流程。v0.1.0 不包含交互式需求访谈、Web 控制台、邮件通知、生产部署，也不声称遍历 gstack 的全部辅助技能。同一 Codex 模型的新会话不等于跨模型独立审查；评分选优也不等于训练模型。
+范围是开发主流程。v0.1.1 不包含交互式需求访谈、Web 控制台、邮件通知、生产部署，也不声称遍历 gstack 的全部辅助技能。同一 Codex 模型的新会话不等于跨模型独立审查；评分选优也不等于训练模型。
 
 ## 安装
 
 需要 Python 3.11+、Git、已安装且能正常调用的 Codex CLI，以及 Linux、macOS 或 WSL。原生 Windows 暂不支持。发布 PR 额外需要 GitHub CLI。Python 包没有运行时第三方依赖。
 
 ```bash
-pipx install 'git+https://github.com/f-tiger/gstack-codex-auto.git@v0.1.0'
+pipx install 'git+https://github.com/f-tiger/gstack-codex-auto.git@v0.1.1'
 gstack-codex-auto --help
 ```
 
@@ -70,6 +72,8 @@ touch ../gca-runs/feature-001/STOP
 
 STOP 在下一阶段/检查边界生效，不会立即中止正在执行的子进程。移除 STOP 后可以继续。调用预算不会因续跑而重置。中断的写入阶段可能保留部分修改，续跑会看到这些内容；请勿手动修改进行中或中断的候选工作区。
 
+Ctrl+C 会向活动的 Codex/测试进程传递取消信号。命令结束后会清理其原进程组，持久运行的服务应在外部单独启动。中断后的 HEAD/分支必须保持不变；控制器提交过程中断可能需要新建运行。v0.1.1 使用第 2 版检查点，不自动兼容旧运行目录。不支持子模块、稀疏检出或隐藏文件变化的 Git 索引标记。
+
 审阅结果后，可以显式发布草稿 PR：
 
 ```bash
@@ -78,6 +82,8 @@ gstack-codex-auto publish ../gca-runs/feature-001 \
 ```
 
 目标必须匹配源码仓库的 `origin`，最终候选分支必须仍指向已验证的提交。发布前检查生成的内容是否包含秘密，并在 PR 中重新运行 CI。
+
+发布还会核对全部实际推送地址，获取运行锁并重新校验审查、QA、评分和测试记录。请保留候选工作区及产物直到发布完成。所有控制器发起的 Git 操作均禁用 hooks，推送不会隐式附带标签。
 
 ## 边界与验证
 

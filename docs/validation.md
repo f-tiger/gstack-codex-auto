@@ -1,4 +1,15 @@
-# v0.1.0 validation record
+# Validation record
+
+## v0.1.1 adversarial follow-up
+
+Two sequential adversarial reviews added 14 regression tests to the original
+31. See [the review record](adversarial-review.md) for reproducible scenarios,
+the fixes, state-format compatibility and remaining limitations. The final
+source suite and the suite run against the installed v0.1.1 wheel both passed
+all 45 tests locally on Python 3.12.14. Live model acceptance and GitHub
+publication remain outstanding.
+
+## v0.1.0 baseline
 
 Recorded on 2026-11-07. This separates controller evidence from model behavior.
 
