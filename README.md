@@ -1,7 +1,7 @@
 # gstack-codex-auto
 
 [![CI](https://github.com/f-tiger/gstack-codex-auto/actions/workflows/ci.yml/badge.svg)](https://github.com/f-tiger/gstack-codex-auto/actions/workflows/ci.yml)
-[中文说明](README.zh-CN.md) · [Validation](docs/validation.md) · [Security](SECURITY.md)
+**English** | [简体中文](README.zh-CN.md) · [Validation](docs/validation.md) · [Security](SECURITY.md)
 
 The v0.1.1 update includes [two adversarial review passes](docs/adversarial-review.md), with regression tests and explicit limitations.
 

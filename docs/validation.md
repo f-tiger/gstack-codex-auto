@@ -6,8 +6,10 @@ Two sequential adversarial reviews added 14 regression tests to the original
 31. See [the review record](adversarial-review.md) for reproducible scenarios,
 the fixes, state-format compatibility and remaining limitations. The final
 source suite and the suite run against the installed v0.1.1 wheel both passed
-all 45 tests locally on Python 3.12.14. Live model acceptance and GitHub
-publication remain outstanding.
+all 45 tests locally on Python 3.12.14. Both suites were rerun successfully
+before the main-branch upload, including a fresh installation of the wheel.
+Live model acceptance remains outstanding. Public release assets and remote
+CI results are tracked on the repository's Releases and Actions pages.
 
 ## v0.1.0 baseline
 

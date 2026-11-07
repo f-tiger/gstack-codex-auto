@@ -61,6 +61,7 @@ Git filters and external services require stronger host controls. Worktrees
 are not security isolation. See [SECURITY.md](../SECURITY.md).
 
 Live Codex/gstack workflow acceptance remains outstanding because the previous
-real CLI request returned HTTP 401. GitHub creation/publishing remains blocked
-by the connection's missing repository-creation permission (HTTP 403). Those
-external failures are not reclassified as passing tests by this review.
+real CLI request returned HTTP 401. At review time, GitHub repository creation
+was blocked by the connection's permissions (HTTP 403); the owner subsequently
+created the repository. Neither that resolution nor the offline tests establish
+live model acceptance.

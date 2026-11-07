@@ -12,7 +12,7 @@ Two adversarial review passes against the initial preview; see [the review recor
 - Clean up process groups after success/timeout; propagate Ctrl+C to active Codex/gate workers.
 - Read captured command output and gate tails with bounded memory.
 
-Checkpoint schema is now 2. Start a new run instead of reusing v0.1.0 state. The live-model and GitHub publication blockers remain unresolved.
+Checkpoint schema is now 2. Start a new run instead of reusing v0.1.0 state. Live-model acceptance remains unresolved; release and CI status are available on GitHub.
 
 ## 0.1.0 — 2026-11-07
 

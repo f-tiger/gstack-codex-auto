@@ -1,6 +1,6 @@
 # gstack-codex-auto
 
-[English](README.md) · [验证记录](docs/validation.md) · [安全边界](SECURITY.md)
+[English](README.md) | **简体中文** · [验证记录](docs/validation.md) · [安全边界](SECURITY.md)
 
 v0.1.1 完成了[两轮对抗检查](docs/adversarial-review.md)，修复恢复、提交一致性、进程清理和发布边界问题。
 
