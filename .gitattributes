@@ -1,0 +1,2 @@
+# Keep captured unittest output byte-for-byte, including its trailing spaces.
+docs/validation/**/*.stderr.txt -whitespace
