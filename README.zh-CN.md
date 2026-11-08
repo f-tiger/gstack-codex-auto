@@ -2,11 +2,33 @@
 
 [English](README.md) | **简体中文** · [验证记录](docs/validation.md) · [安全边界](SECURITY.md)
 
-v0.1.1 完成了[两轮对抗检查](docs/adversarial-review.md)，修复恢复、提交一致性、进程清理和发布边界问题。
+默认推荐使用**当前 Codex 会话直接执行的 skill**：一句话启动规划、开发、审查、测试和修复，不额外启动 Codex CLI，不要求另一套登录。当前宿主自身的登录和工具权限仍然适用。
 
-把产品需求交给 **Codex CLI**，自动串联规划、质疑、实现、审查、QA、修复、文档和候选选择，输出可审阅的 Git 分支。参考 [gstack-auto](https://github.com/loperanger7/gstack-auto) 的流程设计，使用独立编写的 Python 控制器，不依赖 Claude 运行时。
+## 安装会话内 skill（推荐）
 
-**当前是实验性 v0.1.1。** 控制器离线测试和模拟 CLI 集成测试已覆盖主要流程；发布准备时的真实 Codex 请求返回 HTTP 401。因此尚未完成真实模型的全流程验收，不能把离线测试当成真实项目成功率的证据。
+新 skill 从 main 分支安装；现有 v0.1.1 发布标签保留的是之前的 CLI 版本。
+
+```bash
+git clone https://github.com/f-tiger/gstack-codex-auto.git
+cd gstack-codex-auto
+python3 scripts/install-skill.py
+```
+
+默认安装到 `${CODEX_HOME:-~/.codex}/skills/gstack-codex-auto`。其他宿主可用 `--skills-dir /技能目录` 指定位置。已有文件不会自动覆盖；确认替换时添加 `--force`。如技能未出现在列表中，开启新的 Codex 会话，然后说：
+
+```text
+$gstack-codex-auto 在【项目路径】实现【需求】，持续执行规划、开发、审查、测试和修复，直到完成或遇到真正阻塞。
+```
+
+此模式不要求预先准备 `gca.json`、额外模型进程或新 API key。优先使用已安装的 gstack 方法；缺失时会明确使用本项目自带的基础流程。它会保留无关改动、执行真实检查，并在存储允许时保存进度，但不保证会话结束或环境停止后继续运行。详见 [SKILL.md](skills/gstack-codex-auto/SKILL.md)。
+
+**验证范围：**新 skill 的安装和内容已检查，尚未完成代表性开发任务的全流程验收。此前 45 项自动化测试验证的是 Python 控制器，不能据此宣称新 skill 的实际任务效果已经验证。
+
+## 可选的独立 CLI 模式
+
+原 v0.1.1 控制器保留供明确需要独立进程/后台执行的人使用。**只有此模式需要独立 Codex CLI 登录。**此前的 401 是该 CLI 凭据失效，并非 gstack skill 要求再次登录。CLI 的真实模型全流程验收仍未完成。
+
+以下内容描述的是这个可选控制器，不是会话内 skill 的安装要求。
 
 ## 能做什么
 

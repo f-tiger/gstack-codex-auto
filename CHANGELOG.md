@@ -1,5 +1,12 @@
 # Changelog
 
+## Conversation skill — main branch
+
+- Add an installable skill that executes in the current assistant conversation by default, without launching another Codex CLI or requiring its separate login.
+- Add a portable installer with existing-file protection and explicit replacement.
+- Make conversation mode the recommended English/Chinese README entry point; retain independent CLI mode as optional.
+- The new skill is distributed from main. The existing v0.1.1 tag remains the historical CLI release; its tests do not certify conversation-mode task performance.
+
 ## 0.1.1 — 2026-11-07
 
 Two adversarial review passes against the initial preview; see [the review record](docs/adversarial-review.md).

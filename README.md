@@ -3,11 +3,33 @@
 [![CI](https://github.com/f-tiger/gstack-codex-auto/actions/workflows/ci.yml/badge.svg)](https://github.com/f-tiger/gstack-codex-auto/actions/workflows/ci.yml)
 **English** | [简体中文](README.zh-CN.md) · [Validation](docs/validation.md) · [Security](SECURITY.md)
 
-The v0.1.1 update includes [two adversarial review passes](docs/adversarial-review.md), with regression tests and explicit limitations.
+Automate planning, implementation, review, testing and repair **inside your current Codex conversation**. The recommended entry point is now a real, portable skill; it does not start another Codex process or require a separate CLI login. Your host's normal authentication and tool permissions still apply.
 
-Turn a product spec into a reviewed, tested Git branch through a bounded **Codex CLI** pipeline. Inspired by the workflow in [gstack-auto](https://github.com/loperanger7/gstack-auto); this is an original implementation with no Claude runtime dependency.
+## Install the conversation skill (recommended)
 
-**Experimental v0.1.1.** Offline controller tests and a simulated CLI integration test cover the workflow. A live Codex smoke attempt during release preparation was rejected with HTTP 401. A real model end-to-end run has **not** been validated. See [the validation record](docs/validation.md).
+Use the main branch for this new skill; the existing v0.1.1 release tag contains the historical CLI only.
+
+```bash
+git clone https://github.com/f-tiger/gstack-codex-auto.git
+cd gstack-codex-auto
+python3 scripts/install-skill.py
+```
+
+The installer copies the skill into `${CODEX_HOME:-~/.codex}/skills/gstack-codex-auto`. Use `--skills-dir /your/host/skills` for a different location. Existing files are protected; use `--force` only to deliberately replace one. Start a new Codex session if the skill is not discovered yet, then ask:
+
+```text
+$gstack-codex-auto Implement [requirement] in [repository]. Continue through planning, implementation, review, tests and repairs until complete or genuinely blocked.
+```
+
+No `gca.json`, separate model subprocess or new API key is required for this mode. The current assistant uses installed gstack methodology when available, otherwise explicitly uses the original workflow included here. It preserves unrelated edits, performs actual checks and records resumable progress when storage is available. It cannot run indefinitely after the conversation/environment stops. See [the skill](skills/gstack-codex-auto/SKILL.md).
+
+**Validation:** the skill's installation and contents have been checked, but a representative full development task through this new mode has not yet been validated. The 45 automated tests below cover the separate Python controller, not the effectiveness of the conversation skill.
+
+## Optional independent CLI mode
+
+The original v0.1.1 Python controller remains available for explicitly requested independent/background runs. **This mode requires its own authenticated Codex CLI.** The previously observed HTTP 401 affected that CLI credential, not gstack or the conversation skill. Real model end-to-end validation of the CLI remains outstanding; see [validation](docs/validation.md).
+
+The remaining instructions describe this optional controller.
 
 ## What it does
 
