@@ -1,0 +1,210 @@
+{
+  "01-before-implementation": {
+    "label": "01-before-implementation",
+    "utc": "2026-11-08T07:42:24.319058+00:00",
+    "command": [
+      "python3",
+      "/workspace/gstack-codex-auto/examples/session-acceptance/verify.py"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 1,
+    "seconds": 0.854,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "README.md": "df1a8c33813a20f94ec25ba8420cc046c3304ffc8c41df9df5b1957f2f270bd3"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "ab5bb4ad19c22119ebc7a5eca7c9b37d03abdc0ad7494d0b49415a1258e1254a"
+  },
+  "02-implementation-unit": {
+    "label": "02-implementation-unit",
+    "utc": "2026-11-08T07:43:08.482058+00:00",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 0,
+    "seconds": 0.061,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "92761b9decc37c6b418f3149753321ce3ce5c82f51dff9a1f9df4b21c95934c5"
+  },
+  "03-implementation-external": {
+    "label": "03-implementation-external",
+    "utc": "2026-11-08T07:43:10.415341+00:00",
+    "command": [
+      "python3",
+      "/workspace/gstack-codex-auto/examples/session-acceptance/verify.py"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 0,
+    "seconds": 1.896,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "7706f90da88fdafb7a527256d8759427664ad338b0fa762173533474f2f06aad"
+  },
+  "04-original-contract": {
+    "label": "04-original-contract",
+    "utc": "2026-11-08T07:43:10.624375+00:00",
+    "command": [
+      "python3",
+      "/workspace/gstack-codex-auto/examples/acceptance.py"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 0,
+    "seconds": 0.181,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "79f6ffed9512f6739b9551e74607731e4894812206b41cf1bf2679b7dae48c3e"
+  },
+  "05-replay-detects-fault": {
+    "label": "05-replay-detects-fault",
+    "utc": "2026-11-08T07:43:51.194643+00:00",
+    "command": [
+      "python3",
+      "/workspace/gstack-codex-auto/examples/session-acceptance/verify.py"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 1,
+    "seconds": 1.738,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "37e2580774cdedc016e95473519a0674a18303755a3c372b385c64e83b9eb4a5",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "d303018e24b979bb0b1cc3b176b72d149517167b8e1bd94c7474ce1a483e0de7"
+  },
+  "06-repaired-unit": {
+    "label": "06-repaired-unit",
+    "utc": "2026-11-08T07:44:35.683485+00:00",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 0,
+    "seconds": 0.057,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "c660a344b8d704e79a004eaa115a1a0f1d64f491a3e47cb9c4b79b554938504c"
+  },
+  "07-repaired-external": {
+    "label": "07-repaired-external",
+    "utc": "2026-11-08T07:44:37.453300+00:00",
+    "command": [
+      "python3",
+      "/workspace/gstack-codex-auto/examples/session-acceptance/verify.py"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 0,
+    "seconds": 1.743,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "73f046527707f82c4762da8ee8555541cae06724c96627dab33eaa4198b593cb"
+  },
+  "08-repaired-original": {
+    "label": "08-repaired-original",
+    "utc": "2026-11-08T07:44:37.646442+00:00",
+    "command": [
+      "python3",
+      "/workspace/gstack-codex-auto/examples/acceptance.py"
+    ],
+    "cwd": "/workspace/gca-session-acceptance-20261108/target",
+    "exit_code": 0,
+    "seconds": 0.165,
+    "target_files_sha256": {
+      "NOTES.txt": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+      "utc.py": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+      ".gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+      "README.md": "824bd944c494b3c8bd7b964719b427a0cb733436629fd9f086bb834016b54144"
+    },
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "2a6f3ffb7a9826b94e1b6f8ee5ac782247c7188cb6ef2feea78eeb9c187f4c13"
+  },
+  "baseline": {
+    "target": "/workspace/gca-session-acceptance-20261108/target",
+    "initial_commit": "de22efc97ee25c30cd8d6a310a3406baf2746bc0",
+    "unrelated_path": "NOTES.txt",
+    "unrelated_sha256": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+    "skill_sha256": "f8e8b2d05e625fedff3ae1f8bfc56aa21df27906a53355b9dbe7ddf607802890"
+  },
+  "fault-injection": {
+    "intentional": true,
+    "change": "Drop fractional precision",
+    "before_sha256": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+    "after_sha256": "37e2580774cdedc016e95473519a0674a18303755a3c372b385c64e83b9eb4a5"
+  },
+  "final": {
+    "status": "passed_scoped_session_acceptance",
+    "python": "3.12.14",
+    "target_commit": "443a6986cce13a2f3b7f018d20db8e6663c5b693",
+    "skill_sha256": "f8e8b2d05e625fedff3ae1f8bfc56aa21df27906a53355b9dbe7ddf607802890",
+    "utc_py_sha256": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+    "harness_sha256": "1bfedf30b1c2300366e93fa0d397a99a2f2e5c3f6ed0c0bd8750080e34030dba",
+    "unrelated_sha256_before": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+    "unrelated_sha256_after": "0eb145c7aa7cf74a62619b0240fabbe8598f841f38451bdc689c3a77cce2effd",
+    "remaining_status": " M NOTES.txt\n",
+    "final_tests": {
+      "target_unit": 6,
+      "external_contract_methods": 9,
+      "original_contract": 4
+    },
+    "repair_cycles": 1,
+    "fault_injection": "intentional fractional-precision corruption",
+    "continuation_scope": "same-session checkpoint replay only",
+    "nested_model_cli_calls": 0,
+    "limitations": [
+      "single CLI task, not reliability benchmark",
+      "no cross-session or environment-restart test",
+      "no graphical interface; browser QA not applicable",
+      "independent Python controller live-model acceptance remains unverified"
+    ]
+  },
+  "harness": {
+    "path": "/workspace/gstack-codex-auto/examples/session-acceptance/verify.py",
+    "sha256": "1bfedf30b1c2300366e93fa0d397a99a2f2e5c3f6ed0c0bd8750080e34030dba"
+  },
+  "verified-before-replay": {
+    "utc_py_sha256": "f67451a53580a50e6c130ba6a98220bb7bcb0cba7178b3976cda15d0b485f39b",
+    "checkpoint": "progress.md",
+    "external_receipt": "03-implementation-external.json"
+  }
+}

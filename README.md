@@ -23,7 +23,7 @@ $gstack-codex-auto Implement [requirement] in [repository]. Continue through pla
 
 No `gca.json`, separate model subprocess or new API key is required for this mode. The current assistant uses installed gstack methodology when available, otherwise explicitly uses the original workflow included here. It preserves unrelated edits, performs actual checks and records resumable progress when storage is available. It cannot run indefinitely after the conversation/environment stops. See [the skill](skills/gstack-codex-auto/SKILL.md).
 
-**Validation:** the skill's installation and contents have been checked, but a representative full development task through this new mode has not yet been validated. The 45 automated tests below cover the separate Python controller, not the effectiveness of the conversation skill.
+**Validation:** the conversation skill passed [one real CLI development task](docs/session-acceptance.md) in the current assistant session: planning, implementation, review, actual tests, controlled fault detection/repair and same-session checkpoint replay. The final 6 unit + 9 external + 4 original acceptance tests passed, and an unrelated draft was preserved. This is scoped evidence, not a reliability benchmark or proof of cross-session persistence. The separate 45-test suite covers the Python controller.
 
 ## Optional independent CLI mode
 

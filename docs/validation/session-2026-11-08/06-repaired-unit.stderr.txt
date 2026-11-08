@@ -1,0 +1,11 @@
+test_bad_offset_is_not_normalized (test_utc.ConversionTests.test_bad_offset_is_not_normalized) ... ok
+test_fraction_value_preserved (test_utc.ConversionTests.test_fraction_value_preserved) ... ok
+test_offset_and_rollover (test_utc.ConversionTests.test_offset_and_rollover) ... ok
+test_timezone_required (test_utc.ConversionTests.test_timezone_required) ... ok
+test_utc_is_idempotent (test_utc.ConversionTests.test_utc_is_idempotent) ... ok
+test_utc_underflow_is_useful_error (test_utc.ConversionTests.test_utc_underflow_is_useful_error) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK

@@ -1,5 +1,15 @@
 # Validation record
 
+## Conversation skill acceptance — 2026-11-08
+
+The default conversation skill passed one real UTC CLI development task using
+the current assistant and actual terminal tools. Planning, implementation,
+documentation, review, functional checks, controlled fault repair and same-session
+checkpoint replay were exercised. All 6 unit + 9 external + 4 original acceptance
+tests passed after repair; unrelated edits and the external harness were preserved.
+See [the scoped report and raw evidence](session-acceptance.md). This does not
+validate cross-session persistence or the independent CLI described below.
+
 ## v0.1.1 adversarial follow-up
 
 Two sequential adversarial reviews added 14 regression tests to the original
@@ -8,7 +18,7 @@ the fixes, state-format compatibility and remaining limitations. The final
 source suite and the suite run against the installed v0.1.1 wheel both passed
 all 45 tests locally on Python 3.12.14. Both suites were rerun successfully
 before the main-branch upload, including a fresh installation of the wheel.
-Live model acceptance remains outstanding. Public release assets and remote
+Live model acceptance of the independent CLI remains outstanding. Public release assets and remote
 CI results are tracked on the repository's Releases and Actions pages.
 
 ## v0.1.0 baseline

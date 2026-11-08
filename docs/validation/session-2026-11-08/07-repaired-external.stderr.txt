@@ -1,0 +1,14 @@
+test_argument_contract (__main__.UTCContract.test_argument_contract) ... ok
+test_basic_offsets (__main__.UTCContract.test_basic_offsets) ... ok
+test_calendar_boundaries (__main__.UTCContract.test_calendar_boundaries) ... ok
+test_deterministic_offset_sweep (__main__.UTCContract.test_deterministic_offset_sweep) ... ok
+test_fractional_seconds (__main__.UTCContract.test_fractional_seconds) ... ok
+test_help (__main__.UTCContract.test_help) ... ok
+test_host_timezone_independence (__main__.UTCContract.test_host_timezone_independence) ... ok
+test_no_filesystem_writes (__main__.UTCContract.test_no_filesystem_writes) ... ok
+test_rejects_invalid_input (__main__.UTCContract.test_rejects_invalid_input) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.679s
+
+OK

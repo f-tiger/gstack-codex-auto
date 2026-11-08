@@ -6,6 +6,7 @@
 - Add a portable installer with existing-file protection and explicit replacement.
 - Make conversation mode the recommended English/Chinese README entry point; retain independent CLI mode as optional.
 - The new skill is distributed from main. The existing v0.1.1 tag remains the historical CLI release; its tests do not certify conversation-mode task performance.
+- Completed one scoped in-session UTC CLI development acceptance on 2026-11-08, with actual subprocess tests, an explicit fault-injection/repair drill, checkpoint replay and preservation of unrelated edits. Published the result, harness and execution evidence; added product replay checks to CI.
 
 ## 0.1.1 — 2026-11-07
 
